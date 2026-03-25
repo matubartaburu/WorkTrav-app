@@ -47,8 +47,7 @@ export default function RegisterPage() {
       })
     }
 
-    router.push('/feed')
-    router.refresh()
+    router.push('/onboarding')
   }
 
   return (

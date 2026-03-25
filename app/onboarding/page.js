@@ -10,31 +10,32 @@ import LanguageSwitcher from '@/components/LanguageSwitcher'
 
 const TOTAL_STEPS = 3
 
-const SEASONS = (t) => [
-  { value: 0, label: t('onboarding_seasons_0') },
-  { value: 1, label: t('onboarding_seasons_1') },
-  { value: 2, label: t('onboarding_seasons_2') },
-  { value: 3, label: t('onboarding_seasons_3') },
-]
-
 export default function OnboardingPage() {
   const router = useRouter()
   const { t, lang } = useLanguage()
   const [step, setStep] = useState(1)
   const [form, setForm] = useState({ pais: '', edad: '', temporadas: null })
+  const [profile, setProfile] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Si ya completó onboarding, redirigir al feed
-    const check = async () => {
+    const init = async () => {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
-      const { data: profile } = await supabase
-        .from('users').select('onboarding_completado').eq('id', user.id).single()
-      if (profile?.onboarding_completado) router.push('/feed')
+
+      const { data: prof } = await supabase
+        .from('users').select('*').eq('id', user.id).single()
+
+      if (prof?.onboarding_completado) { router.push('/feed'); return }
+
+      setProfile(prof)
+      // Pre-llenar país si ya lo tenía (ej: registro por email)
+      if (prof?.pais) setForm(f => ({ ...f, pais: prof.pais }))
+      setLoading(false)
     }
-    check()
+    init()
   }, [router])
 
   const handleFinish = async () => {
@@ -67,21 +68,30 @@ export default function OnboardingPage() {
 
   const countries = COUNTRIES_BY_LANG[lang] ?? COUNTRIES_BY_LANG['es']
 
+  const seasons = [
+    { value: 0, label: t('onboarding_seasons_0') },
+    { value: 1, label: t('onboarding_seasons_1') },
+    { value: 2, label: t('onboarding_seasons_2') },
+    { value: 3, label: t('onboarding_seasons_3') },
+  ]
+
+  if (loading) return null
+
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4 py-10">
       {/* Header */}
-      <div className="w-full max-w-sm mb-8 flex items-center justify-between">
+      <div className="w-full max-w-sm mb-6 flex items-center justify-between">
         <WorkTravLogo size="md" />
         <LanguageSwitcher />
       </div>
 
       <div className="w-full max-w-sm">
-        {/* Progress */}
-        <div className="flex items-center gap-2 mb-6">
+        {/* Barra de progreso */}
+        <div className="flex items-center gap-2 mb-2">
           {[1, 2, 3].map((s) => (
             <div
               key={s}
-              className={`h-1.5 flex-1 rounded-full transition-colors duration-300 ${
+              className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
                 s <= step ? 'bg-accent' : 'bg-border'
               }`}
             />
@@ -91,14 +101,35 @@ export default function OnboardingPage() {
           {t('onboarding_step')} {step} {t('onboarding_of')} {TOTAL_STEPS}
         </p>
 
-        {/* Card */}
-        <div className="bg-card border border-border rounded-2xl p-8">
+        {/* Avatar y nombre de Google */}
+        {profile && (
+          <div className="flex items-center gap-3 mb-6">
+            {profile.avatar_url ? (
+              <img
+                src={profile.avatar_url}
+                alt={profile.nombre}
+                className="w-10 h-10 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center text-accent font-semibold">
+                {profile.nombre?.charAt(0).toUpperCase() || '?'}
+              </div>
+            )}
+            <div>
+              <p className="text-sm font-medium">{profile.nombre}</p>
+              <p className="text-xs text-text-muted">{profile.email}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Card del paso */}
+        <div className="bg-card border border-border rounded-2xl p-6">
           {step === 1 && (
             <div>
-              <h1 className="text-xl font-semibold mb-1">{t('onboarding_welcome')}</h1>
-              <p className="text-text-secondary text-sm mb-6">{t('onboarding_subtitle')}</p>
-              <h2 className="text-base font-medium mb-4">{t('onboarding_country_title')}</h2>
-              <div className="grid grid-cols-2 gap-2">
+              <h1 className="text-lg font-semibold mb-1">{t('onboarding_welcome')}</h1>
+              <p className="text-text-secondary text-sm mb-5">{t('onboarding_subtitle')}</p>
+              <h2 className="text-sm font-medium text-text-secondary mb-3">{t('onboarding_country_title')}</h2>
+              <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-1">
                 {countries.map((c) => (
                   <button
                     key={c}
@@ -118,7 +149,7 @@ export default function OnboardingPage() {
 
           {step === 2 && (
             <div>
-              <h2 className="text-xl font-semibold mb-6">{t('onboarding_age_title')}</h2>
+              <h2 className="text-lg font-semibold mb-6">{t('onboarding_age_title')}</h2>
               <input
                 type="number"
                 min={16}
@@ -126,16 +157,17 @@ export default function OnboardingPage() {
                 value={form.edad}
                 onChange={(e) => setForm({ ...form, edad: e.target.value })}
                 placeholder={t('onboarding_age_placeholder')}
-                className="w-full bg-surface border border-border rounded-xl px-4 py-4 text-2xl text-center font-semibold text-text-primary focus:outline-none focus:border-accent transition-colors"
+                className="w-full bg-surface border border-border rounded-xl px-4 py-5 text-3xl text-center font-bold text-text-primary focus:outline-none focus:border-accent transition-colors"
+                autoFocus
               />
             </div>
           )}
 
           {step === 3 && (
             <div>
-              <h2 className="text-xl font-semibold mb-6">{t('onboarding_seasons_title')}</h2>
+              <h2 className="text-lg font-semibold mb-5">{t('onboarding_seasons_title')}</h2>
               <div className="space-y-2">
-                {SEASONS(t).map(({ value, label }) => (
+                {seasons.map(({ value, label }) => (
                   <button
                     key={value}
                     onClick={() => setForm({ ...form, temporadas: value })}
@@ -153,7 +185,7 @@ export default function OnboardingPage() {
           )}
         </div>
 
-        {/* Actions */}
+        {/* Botones */}
         <div className="mt-4 space-y-2">
           <button
             onClick={() => {
