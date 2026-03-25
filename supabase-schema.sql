@@ -125,4 +125,6 @@ INSERT INTO public.resorts (nombre, estado_usa, latitud, longitud) VALUES
   ('Stowe', 'Vermont', 44.5303, -72.7814),
   ('Big Sky', 'Montana', 45.2860, -111.4015),
   ('Sun Valley', 'Idaho', 43.6963, -114.3513),
-  ('Whistler Blackcomb', 'British Columbia', 50.1163, -122.9574);
+  ('Whistler Blackcomb', 'British Columbia', 50.1163, -122.9574), 
+  ('Red River', 'New Mexico', 36.6811, -105.4433);
+
