@@ -1,15 +1,13 @@
 import Link from 'next/link'
-import { Mountain, Star, Users, Map } from 'lucide-react'
+import { Star, Users, Map } from 'lucide-react'
+import WorkTravLogo from '@/components/WorkTravLogo'
 
 export default function Home() {
   return (
     <main className="min-h-screen bg-background">
       {/* Navbar */}
       <nav className="border-b border-border px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Mountain className="text-accent" size={24} />
-          <span className="font-semibold text-lg tracking-tight">SnowRoute</span>
-        </div>
+        <WorkTravLogo size="md" />
         <div className="flex items-center gap-3">
           <Link
             href="/login"
@@ -87,7 +85,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="border-t border-border px-6 py-6 text-center text-text-muted text-sm">
-        SnowRoute © 2025 — Hecho para la comunidad W&T
+        WorkTrav © 2025 — Hecho para la comunidad W&T
       </footer>
     </main>
   )

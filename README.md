@@ -1,4 +1,4 @@
-# SnowRoute — Work & Travel Community
+# WorkTrav — Work & Travel Community
 
 ## Setup en 5 pasos
 

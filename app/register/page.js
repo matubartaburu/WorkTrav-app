@@ -3,8 +3,9 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Mountain } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
+import WorkTravLogo from '@/components/WorkTravLogo'
+import SocialAuthButtons from '@/components/auth/SocialAuthButtons'
 
 const COUNTRIES = ['Argentina', 'España', 'México', 'Brasil', 'Colombia', 'Chile', 'Uruguay', 'Perú', 'Otro']
 
@@ -23,7 +24,6 @@ export default function RegisterPage() {
 
     const supabase = createClient()
 
-    // 1. Crear usuario en Auth
     const { data, error: authError } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
@@ -38,7 +38,6 @@ export default function RegisterPage() {
       return
     }
 
-    // 2. Insertar perfil en tabla users
     if (data.user) {
       await supabase.from('users').insert({
         id: data.user.id,
@@ -56,9 +55,8 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         {/* Logo */}
-        <Link href="/" className="flex items-center justify-center gap-2 mb-8">
-          <Mountain className="text-accent" size={24} />
-          <span className="font-semibold text-lg">SnowRoute</span>
+        <Link href="/" className="flex items-center justify-center mb-8">
+          <WorkTravLogo size="lg" />
         </Link>
 
         {/* Card */}
@@ -66,7 +64,9 @@ export default function RegisterPage() {
           <h1 className="text-xl font-semibold mb-1">Crear cuenta</h1>
           <p className="text-text-secondary text-sm mb-6">Gratis para siempre</p>
 
-          <form onSubmit={handleRegister} className="space-y-4">
+          <SocialAuthButtons />
+
+          <form onSubmit={handleRegister} className="space-y-4 mt-4">
             <div>
               <label className="text-sm text-text-secondary mb-1.5 block">Nombre</label>
               <input

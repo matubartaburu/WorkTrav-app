@@ -1,7 +1,7 @@
 import './globals.css'
 
 export const metadata = {
-  title: 'SnowRoute — Work & Travel Community',
+  title: 'WorkTrav — Work & Travel Community',
   description: 'Conectá con estudiantes que hacen Work & Travel en USA. Reviews de resorts, empresas y trabajos.',
 }
 

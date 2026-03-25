@@ -2,8 +2,9 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Mountain, LogOut, User } from 'lucide-react'
+import { LogOut, User } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
+import WorkTravLogo from '@/components/WorkTravLogo'
 
 export default function Navbar({ user }) {
   const router = useRouter()
@@ -18,9 +19,8 @@ export default function Navbar({ user }) {
   return (
     <nav className="border-b border-border px-6 py-4 flex items-center justify-between sticky top-0 bg-background/80 backdrop-blur-md z-50">
       {/* Logo */}
-      <Link href="/feed" className="flex items-center gap-2">
-        <Mountain className="text-accent" size={22} />
-        <span className="font-semibold tracking-tight">SnowRoute</span>
+      <Link href="/feed">
+        <WorkTravLogo size="md" />
       </Link>
 
       {/* Links (desktop) */}

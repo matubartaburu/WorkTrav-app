@@ -1,5 +1,5 @@
 -- ============================================
--- SNOWROUTE — Schema de Base de Datos
+-- WORKTRAV — Schema de Base de Datos
 -- Pegar esto en el SQL Editor de Supabase
 -- ============================================
 
