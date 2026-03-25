@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { useLanguage } from '@/lib/LanguageContext'
-import { COUNTRIES_BY_LANG } from '@/lib/i18n'
 import WorkTravLogo from '@/components/WorkTravLogo'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
+import CountrySelector from '@/components/CountrySelector'
 
 const TOTAL_STEPS = 3
 
@@ -65,8 +65,6 @@ export default function OnboardingPage() {
     if (step === 3) return form.temporadas !== null
     return false
   }
-
-  const countries = COUNTRIES_BY_LANG[lang] ?? COUNTRIES_BY_LANG['es']
 
   const seasons = [
     { value: 0, label: t('onboarding_seasons_0') },
@@ -129,21 +127,7 @@ export default function OnboardingPage() {
               <h1 className="text-lg font-semibold mb-1">{t('onboarding_welcome')}</h1>
               <p className="text-text-secondary text-sm mb-5">{t('onboarding_subtitle')}</p>
               <h2 className="text-sm font-medium text-text-secondary mb-3">{t('onboarding_country_title')}</h2>
-              <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-1">
-                {countries.map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => setForm({ ...form, pais: c })}
-                    className={`py-3 px-4 rounded-xl text-sm font-medium border transition-colors text-left ${
-                      form.pais === c
-                        ? 'border-accent bg-accent/10 text-accent'
-                        : 'border-border hover:border-text-muted text-text-primary'
-                    }`}
-                  >
-                    {c}
-                  </button>
-                ))}
-              </div>
+              <CountrySelector value={form.pais} onChange={pais => setForm({ ...form, pais })} />
             </div>
           )}
 

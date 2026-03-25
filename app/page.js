@@ -4,37 +4,32 @@ import Link from 'next/link'
 import { Star, Users, Map } from 'lucide-react'
 import WorkTravLogo from '@/components/WorkTravLogo'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
+import FlagsMarquee from '@/components/FlagsMarquee'
 import { useLanguage } from '@/lib/LanguageContext'
 
 export default function Home() {
   const { t } = useLanguage()
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen bg-background overflow-x-hidden">
       {/* Navbar */}
       <nav className="border-b border-border px-6 py-4 flex items-center justify-between">
         <WorkTravLogo size="md" />
         <div className="flex items-center gap-4">
           <LanguageSwitcher />
-          <Link
-            href="/login"
-            className="text-text-secondary hover:text-text-primary text-sm transition-colors"
-          >
+          <Link href="/login" className="text-text-secondary hover:text-text-primary text-sm transition-colors">
             {t('login_title')}
           </Link>
-          <Link
-            href="/register"
-            className="bg-accent hover:bg-accent-hover text-white text-sm px-4 py-2 rounded-lg transition-colors"
-          >
+          <Link href="/register" className="bg-accent hover:bg-accent-hover text-white text-sm px-4 py-2 rounded-lg transition-colors">
             {t('hero_cta')}
           </Link>
         </div>
       </nav>
 
       {/* Hero */}
-      <section className="px-6 py-24 text-center max-w-3xl mx-auto">
+      <section className="px-6 pt-20 pb-10 text-center max-w-3xl mx-auto">
         <div className="inline-flex items-center gap-2 bg-card border border-border rounded-full px-4 py-1.5 text-sm text-text-secondary mb-8">
-          <span className="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+          <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
           {t('community_badge')}
         </div>
 
@@ -46,23 +41,22 @@ export default function Home() {
           {t('hero_subtitle')}
         </p>
         <div className="flex items-center justify-center gap-4 flex-wrap">
-          <Link
-            href="/register"
-            className="bg-accent hover:bg-accent-hover text-white px-6 py-3 rounded-lg font-medium transition-colors"
-          >
+          <Link href="/register" className="bg-accent hover:bg-accent-hover text-white px-6 py-3 rounded-lg font-medium transition-colors">
             {t('hero_cta')}
           </Link>
-          <Link
-            href="/login"
-            className="border border-border text-text-primary hover:border-text-secondary px-6 py-3 rounded-lg font-medium transition-colors"
-          >
+          <Link href="/login" className="border border-border text-text-primary hover:border-text-secondary px-6 py-3 rounded-lg font-medium transition-colors">
             {t('hero_secondary')}
           </Link>
         </div>
       </section>
 
+      {/* Banderas animadas */}
+      <div className="border-y border-border/50 bg-card/30">
+        <FlagsMarquee />
+      </div>
+
       {/* Features */}
-      <section className="px-6 pb-24 max-w-5xl mx-auto">
+      <section className="px-6 py-20 max-w-5xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-card border border-border rounded-xl p-6">
             <Star className="text-accent mb-4" size={24} />
