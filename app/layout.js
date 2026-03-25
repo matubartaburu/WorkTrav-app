@@ -1,4 +1,5 @@
 import './globals.css'
+import { LanguageProvider } from '@/lib/LanguageContext'
 
 export const metadata = {
   title: 'WorkTrav — Work & Travel Community',
@@ -9,7 +10,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="es">
       <body className="bg-background text-text-primary min-h-screen">
-        {children}
+        <LanguageProvider>
+          {children}
+        </LanguageProvider>
       </body>
     </html>
   )

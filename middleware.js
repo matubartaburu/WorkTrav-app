@@ -40,6 +40,11 @@ export async function middleware(request) {
     return NextResponse.redirect(new URL('/feed', request.url))
   }
 
+  // Onboarding requiere estar logueado
+  if (!user && request.nextUrl.pathname === '/onboarding') {
+    return NextResponse.redirect(new URL('/login', request.url))
+  }
+
   return supabaseResponse
 }
 

@@ -59,7 +59,9 @@ export async function GET(request) {
         })
       }
 
-      return NextResponse.redirect(`${origin}${next}`)
+      // Nuevos usuarios van al onboarding, los que ya lo hicieron al feed
+      const destination = !existingUser ? '/onboarding' : next
+      return NextResponse.redirect(`${origin}${destination}`)
     }
   }
 
