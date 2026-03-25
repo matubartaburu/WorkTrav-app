@@ -8,7 +8,7 @@ import { useLanguage } from '@/lib/LanguageContext'
 import { getResortInfo } from '@/lib/resorts-data'
 
 export default function ResortsPage() {
-  const { t } = useLanguage()
+  const { t, lang } = useLanguage()
   const [resorts, setResorts] = useState([])
 
   useEffect(() => {
@@ -23,12 +23,12 @@ export default function ResortsPage() {
   return (
     <div>
       <h1 className="text-xl font-semibold mb-1">{t('resorts_title')}</h1>
-      <p className="text-text-secondary text-sm mb-6">Info útil para tu temporada W&T</p>
+      <p className="text-text-secondary text-sm mb-6">{t('resorts_subtitle')}</p>
 
       <div className="space-y-3">
         {resorts.length > 0 ? (
           resorts.map(resort => {
-            const info = getResortInfo(resort.nombre)
+            const info = getResortInfo(resort.nombre, lang)
             return (
               <Link
                 key={resort.id}
@@ -65,7 +65,7 @@ export default function ResortsPage() {
                         </span>
                         {info.alojamiento_empresa && (
                           <span className="inline-flex items-center gap-1 text-xs bg-green-500/10 border border-green-500/20 rounded-full px-2.5 py-1 text-green-400">
-                            <Home size={10} /> Housing empresa
+                            <Home size={10} /> {t('resorts_housing_company')}
                           </span>
                         )}
                       </div>
@@ -78,7 +78,7 @@ export default function ResortsPage() {
             )
           })
         ) : (
-          <div className="text-center py-16 text-text-secondary text-sm">Cargando...</div>
+          <div className="text-center py-16 text-text-secondary text-sm">{t('resorts_loading')}</div>
         )}
       </div>
     </div>

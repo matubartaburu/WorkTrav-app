@@ -9,10 +9,12 @@ import {
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { getResortInfo, DIFICULTAD_COLOR } from '@/lib/resorts-data'
+import { useLanguage } from '@/lib/LanguageContext'
 import PostCard from '@/components/feed/PostCard'
 
 export default function ResortDetailPage() {
   const { id } = useParams()
+  const { t, lang } = useLanguage()
   const [resort, setResort] = useState(null)
   const [posts, setPosts] = useState([])
   const [userId, setUserId] = useState(null)
@@ -41,14 +43,14 @@ export default function ResortDetailPage() {
   }, [id])
 
   if (loading) return (
-    <div className="text-center py-20 text-text-secondary text-sm">Cargando...</div>
+    <div className="text-center py-20 text-text-secondary text-sm">{t('resorts_loading')}</div>
   )
 
   if (!resort) return (
-    <div className="text-center py-20 text-text-secondary text-sm">Resort no encontrado.</div>
+    <div className="text-center py-20 text-text-secondary text-sm">{t('resort_not_found')}</div>
   )
 
-  const info = getResortInfo(resort.nombre)
+  const info = getResortInfo(resort.nombre, lang)
 
   return (
     <div>
@@ -81,28 +83,28 @@ export default function ResortDetailPage() {
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-card border border-border rounded-xl p-4">
               <div className="flex items-center gap-2 text-text-muted text-xs mb-1.5">
-                <Calendar size={12} /> Temporada
+                <Calendar size={12} /> {t('resort_season')}
               </div>
               <p className="font-semibold text-sm">{info.temporada}</p>
             </div>
 
             <div className="bg-card border border-border rounded-xl p-4">
               <div className="flex items-center gap-2 text-text-muted text-xs mb-1.5">
-                <DollarSign size={12} /> Salario aprox.
+                <DollarSign size={12} /> {t('resort_salary')}
               </div>
               <p className="font-semibold text-sm text-green-400">{info.salario}</p>
             </div>
 
             <div className="bg-card border border-border rounded-xl p-4">
               <div className="flex items-center gap-2 text-text-muted text-xs mb-1.5">
-                <Thermometer size={12} /> Nieve
+                <Thermometer size={12} /> {t('resort_snow')}
               </div>
               <p className="font-semibold text-sm">{info.nieve}</p>
             </div>
 
             <div className="bg-card border border-border rounded-xl p-4">
               <div className="flex items-center gap-2 text-text-muted text-xs mb-1.5">
-                <MapPin size={12} /> Ciudad cercana
+                <MapPin size={12} /> {t('resort_near_city')}
               </div>
               <p className="font-semibold text-sm">{info.ciudad_cercana}</p>
             </div>
@@ -111,9 +113,9 @@ export default function ResortDetailPage() {
           {/* Dificultad W&T */}
           <div className="bg-card border border-border rounded-xl p-5">
             <div className="flex items-center gap-2 text-text-muted text-xs mb-2">
-              <Briefcase size={12} /> Dificultad para W&T
+              <Briefcase size={12} /> {t('resort_difficulty')}
             </div>
-            <p className={`font-semibold text-sm ${DIFICULTAD_COLOR[info.dificultad_wt] ?? 'text-text-primary'}`}>
+            <p className={`font-semibold text-sm ${DIFICULTAD_COLOR[info.dificultad_wt_key] ?? 'text-text-primary'}`}>
               {info.dificultad_wt}
             </p>
           </div>
@@ -121,12 +123,12 @@ export default function ResortDetailPage() {
           {/* Housing */}
           <div className="bg-card border border-border rounded-xl p-5">
             <div className="flex items-center gap-2 text-text-muted text-xs mb-2">
-              <Home size={12} /> Alojamiento
+              <Home size={12} /> {t('resort_housing')}
             </div>
             <p className="text-sm text-text-secondary leading-relaxed">{info.housing}</p>
             {info.alojamiento_empresa && (
               <span className="inline-flex items-center gap-1.5 mt-3 text-xs bg-green-500/10 border border-green-500/20 rounded-full px-3 py-1 text-green-400 font-medium">
-                <Home size={10} /> La empresa ofrece housing
+                <Home size={10} /> {t('resort_company_housing')}
               </span>
             )}
           </div>
@@ -134,7 +136,7 @@ export default function ResortDetailPage() {
           {/* Trabajos disponibles */}
           <div className="bg-card border border-border rounded-xl p-5">
             <div className="flex items-center gap-2 text-text-muted text-xs mb-3">
-              <Briefcase size={12} /> Trabajos disponibles
+              <Briefcase size={12} /> {t('resort_jobs')}
             </div>
             <div className="flex flex-wrap gap-2">
               {info.trabajos.map(job => (
@@ -148,7 +150,7 @@ export default function ResortDetailPage() {
           {/* Tips de la comunidad (estáticos por ahora) */}
           <div className="bg-card border border-border rounded-xl p-5">
             <div className="flex items-center gap-2 text-text-muted text-xs mb-3">
-              <Lightbulb size={12} /> Tips para W&T
+              <Lightbulb size={12} /> {t('resort_tips')}
             </div>
             <ul className="space-y-2.5">
               {info.tips.map((tip, i) => (
@@ -163,7 +165,7 @@ export default function ResortDetailPage() {
         </div>
       ) : (
         <div className="bg-card border border-border rounded-xl p-6 text-text-secondary text-sm">
-          Info detallada próximamente.
+          {t('resort_info_soon')}
         </div>
       )}
 
@@ -171,13 +173,13 @@ export default function ResortDetailPage() {
       <div className="mt-8">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-medium text-text-muted uppercase tracking-widest">
-            Experiencias de la comunidad
+            {t('resort_community_experiences')}
           </h2>
           <Link
             href={`/new-post?resort=${id}`}
             className="text-xs text-accent hover:underline"
           >
-            + Compartir
+            {t('resort_share')}
           </Link>
         </div>
 
@@ -189,9 +191,9 @@ export default function ResortDetailPage() {
           </div>
         ) : (
           <div className="bg-card border border-border rounded-xl p-8 text-center text-text-secondary text-sm">
-            <p className="mb-2">Todavía nadie compartió experiencias en {resort.nombre}.</p>
+            <p className="mb-2">{t('resort_no_posts')} {resort.nombre}.</p>
             <Link href={`/new-post?resort=${id}`} className="text-accent hover:underline">
-              ¡Sé el primero!
+              {t('resort_be_first')}
             </Link>
           </div>
         )}
