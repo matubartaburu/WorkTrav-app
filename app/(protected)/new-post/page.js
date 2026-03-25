@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
@@ -11,9 +11,10 @@ const MAX_CHARS = 500
 
 export default function NewPostPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { t } = useLanguage()
   const [contenido, setContenido] = useState('')
-  const [resortId, setResortId] = useState('')
+  const [resortId, setResortId] = useState(searchParams.get('resort') || '')
   const [resorts, setResorts] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
