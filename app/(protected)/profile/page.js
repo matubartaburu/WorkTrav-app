@@ -1,45 +1,58 @@
-import { createClient } from '@/lib/supabase-server'
-import { redirect } from 'next/navigation'
-import { MapPin, Calendar } from 'lucide-react'
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { MapPin } from 'lucide-react'
+import { createClient } from '@/lib/supabase'
+import { useLanguage } from '@/lib/LanguageContext'
 
-export default async function ProfilePage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+const FLAG_MAP = {
+  'Argentina': '🇦🇷', 'España': '🇪🇸', 'México': '🇲🇽',
+  'Brasil': '🇧🇷', 'Brazil': '🇧🇷', 'Colombia': '🇨🇴',
+  'Chile': '🇨🇱', 'Uruguay': '🇺🇾', 'Perú': '🇵🇪', 'Peru': '🇵🇪',
+}
 
-  if (!user) redirect('/login')
+export default function ProfilePage() {
+  const { t } = useLanguage()
+  const router = useRouter()
+  const [profile, setProfile] = useState(null)
+  const [posts, setPosts] = useState([])
 
-  const { data: profile } = await supabase
-    .from('users')
-    .select('*')
-    .eq('id', user.id)
-    .single()
+  useEffect(() => {
+    const fetchData = async () => {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { router.push('/login'); return }
 
-  const { data: posts } = await supabase
-    .from('posts')
-    .select('*, resorts(nombre, estado_usa)')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
+      const [{ data: prof }, { data: userPosts }] = await Promise.all([
+        supabase.from('users').select('*').eq('id', user.id).single(),
+        supabase.from('posts').select('*, resorts(nombre, estado_usa)')
+          .eq('user_id', user.id).order('created_at', { ascending: false }),
+      ])
 
-  const FLAG_MAP = {
-    'Argentina': '🇦🇷', 'España': '🇪🇸', 'México': '🇲🇽',
-    'Brasil': '🇧🇷', 'Colombia': '🇨🇴', 'Chile': '🇨🇱',
-    'Uruguay': '🇺🇾', 'Perú': '🇵🇪',
+      setProfile(prof)
+      setPosts(userPosts || [])
+    }
+    fetchData()
+  }, [router])
+
+  if (!profile) {
+    return <div className="text-center py-20 text-text-secondary text-sm">Cargando...</div>
   }
 
   return (
     <div>
-      {/* Profile header */}
       <div className="bg-card border border-border rounded-xl p-6 mb-6">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 rounded-full bg-accent/20 flex items-center justify-center text-xl font-bold text-accent">
-              {profile?.nombre?.charAt(0).toUpperCase() || '?'}
+              {profile.nombre?.charAt(0).toUpperCase() || '?'}
             </div>
             <div>
-              <h1 className="font-semibold text-lg">{profile?.nombre}</h1>
+              <h1 className="font-semibold text-lg">{profile.nombre}</h1>
               <p className="text-text-secondary text-sm">
-                {FLAG_MAP[profile?.pais] || '🌎'} {profile?.pais}
+                {FLAG_MAP[profile.pais] || '🌎'} {profile.pais}
               </p>
             </div>
           </div>
@@ -47,26 +60,24 @@ export default async function ProfilePage() {
             href="/profile/edit"
             className="text-sm border border-border hover:border-text-secondary px-4 py-2 rounded-lg transition-colors"
           >
-            Editar
+            {t('profile_edit')}
           </Link>
         </div>
 
-        {/* Stats */}
         <div className="flex gap-6 text-sm">
           <div>
-            <span className="font-semibold">{posts?.length || 0}</span>
-            <span className="text-text-secondary ml-1">posts</span>
+            <span className="font-semibold">{posts.length}</span>
+            <span className="text-text-secondary ml-1">{t('profile_posts')}</span>
           </div>
         </div>
       </div>
 
-      {/* Posts del usuario */}
       <h2 className="text-sm font-medium text-text-secondary mb-4 uppercase tracking-wide">
-        Mis experiencias
+        {t('profile_my_experiences')}
       </h2>
 
       <div className="space-y-3">
-        {posts && posts.length > 0 ? (
+        {posts.length > 0 ? (
           posts.map(post => (
             <div key={post.id} className="bg-card border border-border rounded-xl p-4">
               {post.resorts && (
@@ -80,9 +91,9 @@ export default async function ProfilePage() {
           ))
         ) : (
           <p className="text-text-secondary text-sm text-center py-8">
-            Todavía no publicaste nada.{' '}
+            {t('profile_no_posts')}{' '}
             <Link href="/new-post" className="text-accent hover:underline">
-              Compartir experiencia
+              {t('profile_share')}
             </Link>
           </p>
         )}

@@ -5,11 +5,13 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import { useLanguage } from '@/lib/LanguageContext'
 
 const MAX_CHARS = 500
 
 export default function NewPostPage() {
   const router = useRouter()
+  const { t } = useLanguage()
   const [contenido, setContenido] = useState('')
   const [resortId, setResortId] = useState('')
   const [resorts, setResorts] = useState([])
@@ -42,7 +44,7 @@ export default function NewPostPage() {
     })
 
     if (postError) {
-      setError('Error al publicar. Intentá de nuevo.')
+      setError(t('error_generic'))
       setLoading(false)
       return
     }
@@ -55,12 +57,11 @@ export default function NewPostPage() {
 
   return (
     <div>
-      {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <Link href="/feed" className="text-text-secondary hover:text-text-primary transition-colors">
           <ArrowLeft size={20} />
         </Link>
-        <h1 className="text-xl font-semibold">Nueva experiencia</h1>
+        <h1 className="text-xl font-semibold">{t('new_post_title')}</h1>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -68,24 +69,23 @@ export default function NewPostPage() {
           <textarea
             value={contenido}
             onChange={(e) => setContenido(e.target.value.slice(0, MAX_CHARS))}
-            placeholder="Contá tu experiencia en el resort, tips útiles, cómo fue el trabajo..."
+            placeholder={t('new_post_placeholder')}
             rows={6}
             className="w-full bg-transparent text-sm text-text-primary placeholder-text-muted focus:outline-none resize-none leading-relaxed"
           />
           <div className={`text-right text-xs mt-2 ${remaining < 50 ? 'text-red-400' : 'text-text-muted'}`}>
-            {remaining} caracteres restantes
+            {remaining} {t('new_post_chars')}
           </div>
         </div>
 
-        {/* Resort selector */}
         <div>
-          <label className="text-sm text-text-secondary mb-1.5 block">Resort (opcional)</label>
+          <label className="text-sm text-text-secondary mb-1.5 block">{t('new_post_resort')}</label>
           <select
             value={resortId}
             onChange={(e) => setResortId(e.target.value)}
             className="w-full bg-card border border-border rounded-lg px-4 py-3 text-sm text-text-primary focus:outline-none focus:border-accent transition-colors"
           >
-            <option value="">Sin resort específico</option>
+            <option value="">{t('new_post_resort_none')}</option>
             {resorts.map(r => (
               <option key={r.id} value={r.id}>{r.nombre}, {r.estado_usa}</option>
             ))}
@@ -103,7 +103,7 @@ export default function NewPostPage() {
           disabled={loading || !contenido.trim()}
           className="w-full bg-accent hover:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed text-white py-3 rounded-lg font-medium text-sm transition-colors"
         >
-          {loading ? 'Publicando...' : 'Publicar experiencia'}
+          {loading ? t('new_post_loading') : t('new_post_submit')}
         </button>
       </form>
     </div>
