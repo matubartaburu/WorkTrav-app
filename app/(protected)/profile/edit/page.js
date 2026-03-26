@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
@@ -17,6 +17,7 @@ export default function EditProfilePage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  const [resortSearch, setResortSearch] = useState('')
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -43,6 +44,16 @@ export default function EditProfilePage() {
     }
     fetchProfile()
   }, [router])
+
+  const filteredResorts = useMemo(() => {
+    const search = resortSearch.trim().toLowerCase()
+    if (!search) return resorts
+
+    return resorts.filter((resort) => (
+      resort.nombre.toLowerCase().includes(search)
+      || resort.estado_usa.toLowerCase().includes(search)
+    ))
+  }, [resorts, resortSearch])
 
   const handleSave = async (e) => {
     e.preventDefault()
@@ -110,16 +121,27 @@ export default function EditProfilePage() {
         {/* Mi resort esta temporada */}
         <div>
           <label className="text-sm text-text-secondary mb-1.5 block">⛷️ Mi resort esta temporada</label>
+          <input
+            value={resortSearch}
+            onChange={e => setResortSearch(e.target.value)}
+            placeholder="Buscar montaña o estado..."
+            className="w-full bg-card border border-border rounded-lg px-4 py-2.5 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-accent transition-colors mb-2"
+          />
           <select
             value={form.resort_id}
             onChange={e => setForm({ ...form, resort_id: e.target.value })}
             className="w-full bg-card border border-border rounded-lg px-4 py-3 text-sm text-text-primary focus:outline-none focus:border-accent transition-colors"
           >
             <option value="">Sin resort seleccionado</option>
-            {resorts.map(r => (
+            {filteredResorts.map(r => (
               <option key={r.id} value={r.id}>{r.nombre}, {r.estado_usa}</option>
             ))}
           </select>
+          {resortSearch && (
+            <p className="text-xs text-text-muted mt-1">
+              {filteredResorts.length} resultado{filteredResorts.length === 1 ? '' : 's'}
+            </p>
+          )}
         </div>
 
         {/* Empresa organizadora */}
