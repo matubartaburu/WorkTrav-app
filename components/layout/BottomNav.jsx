@@ -2,13 +2,14 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Compass, PlusCircle, Map, User } from 'lucide-react'
+import { Home, Compass, PlusCircle, Building2, User } from 'lucide-react'
 import { clsx } from 'clsx'
 
 const navItems = [
   { href: '/feed', icon: Home, label: 'Inicio' },
   { href: '/resorts', icon: Compass, label: 'Resorts' },
   { href: '/new-post', icon: PlusCircle, label: 'Publicar' },
+  { href: '/companies', icon: Building2, label: 'Compañías' },
   { href: '/profile', icon: User, label: 'Perfil' },
 ]
 

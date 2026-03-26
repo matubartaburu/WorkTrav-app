@@ -30,6 +30,7 @@ export default function Navbar({ user }) {
       <div className="hidden md:flex items-center gap-6 text-sm text-text-secondary">
         <Link href="/feed" className="hover:text-text-primary transition-colors">{t('feed')}</Link>
         <Link href="/resorts" className="hover:text-text-primary transition-colors">{t('resorts')}</Link>
+        <Link href="/companies" className="hover:text-text-primary transition-colors">{t('companies')}</Link>
       </div>
 
       {/* Right side */}
