@@ -12,6 +12,7 @@ export default function EditProfilePage() {
   const { t } = useLanguage()
   const [form, setForm] = useState({ empresa_nombre: '', resort_id: '' })
   const [resorts, setResorts] = useState([])
+  const [companies, setCompanies] = useState([])
   const [resortSearch, setResortSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -24,9 +25,10 @@ export default function EditProfilePage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
 
-      const [{ data: profile }, { data: resortList }] = await Promise.all([
-        supabase.from('users').select('empresa_nombre, resort_id').eq('id', user.id).single(),
+      const [{ data: profile }, { data: resortList }, { data: companyList }] = await Promise.all([
+        supabase.from('users').select('empresa_nombre, resort_id, onboarding_completado').eq('id', user.id).single(),
         supabase.from('resorts').select('id, nombre, estado_usa').order('nombre'),
+        supabase.from('companies').select('nombre').order('nombre'),
       ])
 
       if (profile) {
@@ -36,6 +38,7 @@ export default function EditProfilePage() {
         })
       }
       setResorts(resortList || [])
+      setCompanies(companyList || [])
       setLoading(false)
     }
     fetchProfile()
@@ -50,16 +53,19 @@ export default function EditProfilePage() {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
+    const shouldCompleteOnboarding = !!form.resort_id && !!form.empresa_nombre.trim()
+
     const { error: updateError } = await supabase
       .from('users')
       .update({
         empresa_nombre: form.empresa_nombre.trim(),
         resort_id: form.resort_id || null,
+        onboarding_completado: shouldCompleteOnboarding,
       })
       .eq('id', user.id)
 
     if (updateError) {
-      setError(t('error_generic'))
+      setError(updateError.message || t('error_generic'))
       setSaving(false)
       return
     }
@@ -78,6 +84,7 @@ export default function EditProfilePage() {
     if (!q) return true
     return resort.nombre.toLowerCase().includes(q) || resort.estado_usa.toLowerCase().includes(q)
   })
+  const isCompleted = !!form.resort_id && !!form.empresa_nombre.trim()
 
   return (
     <div>
@@ -88,7 +95,9 @@ export default function EditProfilePage() {
         <h1 className="text-xl font-semibold">{t('profile_edit_title')}</h1>
       </div>
 
-      <p className="text-sm text-text-secondary mb-5">{t('profile_edit_subtitle')}</p>
+      <p className="text-sm text-text-secondary mb-5">
+        {isCompleted ? t('profile_edit_completed') : t('profile_edit_subtitle')}
+      </p>
 
       <form onSubmit={handleSave} className="space-y-5">
         {/* Mi resort esta temporada */}
@@ -115,15 +124,21 @@ export default function EditProfilePage() {
         {/* Empresa organizadora */}
         <div>
           <label className="text-sm text-text-secondary mb-1.5 block">{t('profile_edit_company')}</label>
-          <input
+          <select
             value={form.empresa_nombre}
             onChange={e => setForm({ ...form, empresa_nombre: e.target.value })}
-            placeholder={t('profile_edit_company_placeholder')}
-            className="w-full bg-card border border-border rounded-lg px-4 py-3 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-accent transition-colors"
-          />
+            className="w-full bg-card border border-border rounded-lg px-4 py-3 text-sm text-text-primary focus:outline-none focus:border-accent transition-colors"
+          >
+            <option value="">{t('onboarding_company_none')}</option>
+            {companies.map((company) => (
+              <option key={company.nombre} value={company.nombre}>{company.nombre}</option>
+            ))}
+          </select>
         </div>
 
-        <p className="text-xs text-text-muted">{t('profile_edit_missing_hint')}</p>
+        {!isCompleted && (
+          <p className="text-xs text-text-muted">{t('profile_edit_missing_hint')}</p>
+        )}
 
         {error && (
           <p className="text-red-400 text-sm bg-red-400/10 border border-red-400/20 rounded-lg px-4 py-3">{error}</p>

@@ -13,9 +13,11 @@ export default function OnboardingPage() {
   const [form, setForm] = useState({ resort_id: '', empresa_nombre: '' })
   const [profile, setProfile] = useState(null)
   const [resorts, setResorts] = useState([])
+  const [companies, setCompanies] = useState([])
   const [resortSearch, setResortSearch] = useState('')
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     const init = async () => {
@@ -23,22 +25,24 @@ export default function OnboardingPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
 
-      const [{ data: prof }, { data: resortList }] = await Promise.all([
+      const [{ data: prof }, { data: resortList }, { data: companyList }] = await Promise.all([
         supabase
           .from('users')
           .select('id, email, nombre, avatar_url, resort_id, empresa_nombre, onboarding_completado')
           .eq('id', user.id)
           .single(),
         supabase.from('resorts').select('id, nombre, estado_usa').order('nombre'),
+        supabase.from('companies').select('nombre').order('nombre'),
       ])
 
-      if (prof?.onboarding_completado && prof?.resort_id && prof?.empresa_nombre) {
+      if (prof?.resort_id && prof?.empresa_nombre) {
         router.push('/feed')
         return
       }
 
       setProfile(prof)
       setResorts(resortList || [])
+      setCompanies(companyList || [])
       setForm({
         resort_id: prof?.resort_id || '',
         empresa_nombre: prof?.empresa_nombre || '',
@@ -52,13 +56,21 @@ export default function OnboardingPage() {
     if (!form.resort_id || !form.empresa_nombre.trim()) return
 
     setSaving(true)
+    setError('')
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
-    await supabase.from('users').update({
+    const { error: updateError } = await supabase.from('users').update({
       resort_id: form.resort_id,
       empresa_nombre: form.empresa_nombre.trim(),
       onboarding_completado: true,
     }).eq('id', user.id)
+
+    if (updateError) {
+      setError(updateError.message || t('error_generic'))
+      setSaving(false)
+      return
+    }
+
     router.push('/feed')
   }
 
@@ -128,14 +140,22 @@ export default function OnboardingPage() {
 
             <div>
               <label className="text-sm text-text-secondary mb-1.5 block">{t('onboarding_company')}</label>
-              <input
+              <select
                 value={form.empresa_nombre}
                 onChange={(e) => setForm({ ...form, empresa_nombre: e.target.value })}
-                placeholder={t('onboarding_company_placeholder')}
-                className="w-full bg-surface border border-border rounded-lg px-4 py-3 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-accent transition-colors"
-              />
+                className="w-full bg-surface border border-border rounded-lg px-4 py-3 text-sm text-text-primary focus:outline-none focus:border-accent transition-colors"
+              >
+                <option value="">{t('onboarding_company_none')}</option>
+                {companies.map((company) => (
+                  <option key={company.nombre} value={company.nombre}>{company.nombre}</option>
+                ))}
+              </select>
             </div>
           </div>
+
+          {error && (
+            <p className="text-red-400 text-sm bg-red-400/10 border border-red-400/20 rounded-lg px-4 py-3 mt-4">{error}</p>
+          )}
         </div>
 
         {/* Botones */}
