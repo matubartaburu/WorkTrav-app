@@ -11,7 +11,6 @@ import { StarDisplay } from '@/components/StarRating'
 const PRICE_META = {
   economico: { badge: '$', color: 'text-green-400 bg-green-500/10 border-green-500/20' },
   medio:     { badge: '$$', color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20' },
-  premium:   { badge: '$$$', color: 'text-orange-400 bg-orange-500/10 border-orange-500/20' },
 }
 
 function avgRating(reviews) {
