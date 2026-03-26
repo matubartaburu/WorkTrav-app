@@ -69,3 +69,21 @@ body {
 .marquee-track:hover {
   animation-play-state: paused;
 }
+
+/* Snow animation */
+@keyframes snow-fall {
+  0% {
+    transform: translateY(-10px) translateX(0);
+    opacity: 0;
+  }
+  8% { opacity: 0.75; }
+  92% { opacity: 0.25; }
+  100% {
+    transform: translateY(100vh) translateX(var(--drift, 20px));
+    opacity: 0;
+  }
+}
+
+.snow-falling {
+  animation: snow-fall linear infinite;
+}

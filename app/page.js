@@ -5,15 +5,18 @@ import { Star, Users, Map } from 'lucide-react'
 import WorkTravLogo from '@/components/WorkTravLogo'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 import FlagsMarquee from '@/components/FlagsMarquee'
+import SnowEffect from '@/components/SnowEffect'
 import { useLanguage } from '@/lib/LanguageContext'
 
 export default function Home() {
   const { t } = useLanguage()
 
   return (
-    <main className="min-h-screen bg-background overflow-x-hidden">
+    <main className="min-h-screen bg-background relative overflow-x-hidden">
+      <SnowEffect />
+
       {/* Navbar */}
-      <nav className="border-b border-border px-6 py-4 flex items-center justify-between">
+      <nav className="relative z-10 border-b border-border px-6 py-4 flex items-center justify-between">
         <WorkTravLogo size="md" />
         <div className="flex items-center gap-4">
           <LanguageSwitcher />
@@ -27,7 +30,7 @@ export default function Home() {
       </nav>
 
       {/* Hero */}
-      <section className="px-6 pt-20 pb-10 text-center max-w-3xl mx-auto">
+      <section className="relative z-10 px-6 pt-20 pb-10 text-center max-w-3xl mx-auto">
         <div className="inline-flex items-center gap-2 bg-card border border-border rounded-full px-4 py-1.5 text-sm text-text-secondary mb-8">
           <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
           {t('community_badge')}
@@ -51,12 +54,12 @@ export default function Home() {
       </section>
 
       {/* Banderas animadas */}
-      <div className="border-y border-border/50 bg-card/30">
+      <div className="relative z-10 border-y border-border/50 bg-card/30">
         <FlagsMarquee />
       </div>
 
       {/* Features */}
-      <section className="px-6 py-20 max-w-5xl mx-auto">
+      <section className="relative z-10 px-6 py-20 max-w-5xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-card border border-border rounded-xl p-6">
             <Star className="text-accent mb-4" size={24} />
@@ -76,7 +79,7 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className="border-t border-border px-6 py-6 text-center text-text-muted text-sm">
+      <footer className="relative z-10 border-t border-border px-6 py-6 text-center text-text-muted text-sm">
         {t('footer')}
       </footer>
     </main>
