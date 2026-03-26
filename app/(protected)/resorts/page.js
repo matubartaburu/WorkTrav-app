@@ -3,12 +3,9 @@
 import { useEffect, useState } from 'react'
 import { MapPin, DollarSign, Home, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
-import dynamic from 'next/dynamic'
 import { createClient } from '@/lib/supabase'
 import { useLanguage } from '@/lib/LanguageContext'
 import { getResortInfo } from '@/lib/resorts-data'
-
-const ResortsUsaMap = dynamic(() => import('@/components/resorts/ResortsUsaMap'), { ssr: false })
 
 export default function ResortsPage() {
   const { t, lang } = useLanguage()
@@ -28,17 +25,7 @@ export default function ResortsPage() {
       <h1 className="text-xl font-semibold mb-1">{t('resorts_title')}</h1>
       <p className="text-text-secondary text-sm mb-6">{t('resorts_subtitle')}</p>
 
-      {resorts.length > 0 && (
-        <>
-          <h2 className="text-sm font-medium text-text-muted uppercase tracking-widest mb-3">
-            {t('resorts_map_title')}
-          </h2>
-          <p className="text-xs text-text-secondary mb-3">{t('resorts_map_hint')}</p>
-          <ResortsUsaMap resorts={resorts} lang={lang} />
-        </>
-      )}
-
-      <div className="space-y-3">
+<div className="space-y-3">
         {resorts.length > 0 ? (
           resorts.map(resort => {
             const info = getResortInfo(resort.nombre, lang)
