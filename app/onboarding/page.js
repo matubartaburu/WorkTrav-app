@@ -14,7 +14,7 @@ export default function OnboardingPage() {
   const [profile, setProfile] = useState(null)
   const [resorts, setResorts] = useState([])
   const [companies, setCompanies] = useState([])
-  const [resortSearch, setResortSearch] = useState('')
+  const [hasResortColumn, setHasResortColumn] = useState(true)
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -25,17 +25,25 @@ export default function OnboardingPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
 
+      const { error: resortColumnError } = await supabase
+        .from('users')
+        .select('resort_id')
+        .limit(1)
+
+      const resortColumnAvailable = !resortColumnError
+      setHasResortColumn(resortColumnAvailable)
+
       const [{ data: prof }, { data: resortList }, { data: companyList }] = await Promise.all([
         supabase
           .from('users')
-          .select('id, email, nombre, avatar_url, resort_id, empresa_nombre, onboarding_completado')
+          .select(`id, email, nombre, avatar_url, empresa_nombre, onboarding_completado${resortColumnAvailable ? ', resort_id' : ''}`)
           .eq('id', user.id)
           .single(),
         supabase.from('resorts').select('id, nombre, estado_usa').order('nombre'),
         supabase.from('companies').select('nombre').order('nombre'),
       ])
 
-      if (prof?.resort_id && prof?.empresa_nombre) {
+      if ((resortColumnAvailable ? prof?.resort_id : true) && prof?.empresa_nombre) {
         router.push('/feed')
         return
       }
@@ -44,7 +52,7 @@ export default function OnboardingPage() {
       setResorts(resortList || [])
       setCompanies(companyList || [])
       setForm({
-        resort_id: prof?.resort_id || '',
+        resort_id: resortColumnAvailable ? (prof?.resort_id || '') : '',
         empresa_nombre: prof?.empresa_nombre || '',
       })
       setLoading(false)
@@ -53,17 +61,22 @@ export default function OnboardingPage() {
   }, [router])
 
   const handleFinish = async () => {
-    if (!form.resort_id || !form.empresa_nombre.trim()) return
+    if ((hasResortColumn && !form.resort_id) || !form.empresa_nombre.trim()) return
 
     setSaving(true)
     setError('')
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
-    const { error: updateError } = await supabase.from('users').update({
-      resort_id: form.resort_id,
+    const payload = {
       empresa_nombre: form.empresa_nombre.trim(),
       onboarding_completado: true,
-    }).eq('id', user.id)
+    }
+    if (hasResortColumn) payload.resort_id = form.resort_id
+
+    const { error: updateError } = await supabase
+      .from('users')
+      .update(payload)
+      .eq('id', user.id)
 
     if (updateError) {
       setError(updateError.message || t('error_generic'))
@@ -73,12 +86,6 @@ export default function OnboardingPage() {
 
     router.push('/feed')
   }
-
-  const filteredResorts = resorts.filter((resort) => {
-    const q = resortSearch.trim().toLowerCase()
-    if (!q) return true
-    return resort.nombre.toLowerCase().includes(q) || resort.estado_usa.toLowerCase().includes(q)
-  })
 
   if (loading) return null
 
@@ -118,25 +125,25 @@ export default function OnboardingPage() {
           <p className="text-text-secondary text-sm mb-5">{t('onboarding_required_subtitle')}</p>
 
           <div className="space-y-4">
+            {hasResortColumn ? (
             <div>
               <label className="text-sm text-text-secondary mb-1.5 block">{t('onboarding_resort')}</label>
-              <input
-                value={resortSearch}
-                onChange={(e) => setResortSearch(e.target.value)}
-                placeholder={t('onboarding_resort_search_placeholder')}
-                className="w-full bg-surface border border-border rounded-lg px-4 py-2.5 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-accent transition-colors mb-2"
-              />
               <select
                 value={form.resort_id}
                 onChange={(e) => setForm({ ...form, resort_id: e.target.value })}
                 className="w-full bg-surface border border-border rounded-lg px-4 py-3 text-sm text-text-primary focus:outline-none focus:border-accent transition-colors"
               >
                 <option value="">{t('onboarding_resort_none')}</option>
-                {filteredResorts.map((r) => (
+                {resorts.map((r) => (
                   <option key={r.id} value={r.id}>{r.nombre}, {r.estado_usa}</option>
                 ))}
               </select>
             </div>
+            ) : (
+            <div className="text-xs text-yellow-300 bg-yellow-300/10 border border-yellow-300/20 rounded-lg px-3 py-2">
+              {t('db_missing_resort_column')}
+            </div>
+            )}
 
             <div>
               <label className="text-sm text-text-secondary mb-1.5 block">{t('onboarding_company')}</label>
@@ -162,7 +169,7 @@ export default function OnboardingPage() {
         <div className="mt-4">
           <button
             onClick={handleFinish}
-            disabled={!form.resort_id || !form.empresa_nombre.trim() || saving}
+            disabled={(hasResortColumn && !form.resort_id) || !form.empresa_nombre.trim() || saving}
             className="w-full bg-accent hover:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed text-white py-3 rounded-xl font-medium text-sm transition-colors"
           >
             {t('onboarding_complete_profile')}

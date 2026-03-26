@@ -13,7 +13,7 @@ export default function EditProfilePage() {
   const [form, setForm] = useState({ empresa_nombre: '', resort_id: '' })
   const [resorts, setResorts] = useState([])
   const [companies, setCompanies] = useState([])
-  const [resortSearch, setResortSearch] = useState('')
+  const [hasResortColumn, setHasResortColumn] = useState(true)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -25,8 +25,20 @@ export default function EditProfilePage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
 
+      const { error: resortColumnError } = await supabase
+        .from('users')
+        .select('resort_id')
+        .limit(1)
+
+      const resortColumnAvailable = !resortColumnError
+      setHasResortColumn(resortColumnAvailable)
+
       const [{ data: profile }, { data: resortList }, { data: companyList }] = await Promise.all([
-        supabase.from('users').select('empresa_nombre, resort_id, onboarding_completado').eq('id', user.id).single(),
+        supabase
+          .from('users')
+          .select(`empresa_nombre, onboarding_completado${resortColumnAvailable ? ', resort_id' : ''}`)
+          .eq('id', user.id)
+          .single(),
         supabase.from('resorts').select('id, nombre, estado_usa').order('nombre'),
         supabase.from('companies').select('nombre').order('nombre'),
       ])
@@ -34,7 +46,7 @@ export default function EditProfilePage() {
       if (profile) {
         setForm({
           empresa_nombre: profile.empresa_nombre || '',
-          resort_id: profile.resort_id || '',
+          resort_id: resortColumnAvailable ? (profile.resort_id || '') : '',
         })
       }
       setResorts(resortList || [])
@@ -53,15 +65,16 @@ export default function EditProfilePage() {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
-    const shouldCompleteOnboarding = !!form.resort_id && !!form.empresa_nombre.trim()
+    const shouldCompleteOnboarding = (hasResortColumn ? !!form.resort_id : true) && !!form.empresa_nombre.trim()
+    const payload = {
+      empresa_nombre: form.empresa_nombre.trim(),
+      onboarding_completado: shouldCompleteOnboarding,
+    }
+    if (hasResortColumn) payload.resort_id = form.resort_id || null
 
     const { error: updateError } = await supabase
       .from('users')
-      .update({
-        empresa_nombre: form.empresa_nombre.trim(),
-        resort_id: form.resort_id || null,
-        onboarding_completado: shouldCompleteOnboarding,
-      })
+      .update(payload)
       .eq('id', user.id)
 
     if (updateError) {
@@ -79,12 +92,7 @@ export default function EditProfilePage() {
     <div className="flex items-center justify-center py-20 text-text-secondary text-sm">Cargando...</div>
   )
 
-  const filteredResorts = resorts.filter((resort) => {
-    const q = resortSearch.trim().toLowerCase()
-    if (!q) return true
-    return resort.nombre.toLowerCase().includes(q) || resort.estado_usa.toLowerCase().includes(q)
-  })
-  const isCompleted = !!form.resort_id && !!form.empresa_nombre.trim()
+  const isCompleted = (hasResortColumn ? !!form.resort_id : true) && !!form.empresa_nombre.trim()
 
   return (
     <div>
@@ -101,25 +109,25 @@ export default function EditProfilePage() {
 
       <form onSubmit={handleSave} className="space-y-5">
         {/* Mi resort esta temporada */}
+        {hasResortColumn ? (
         <div>
           <label className="text-sm text-text-secondary mb-1.5 block">{t('profile_edit_resort')}</label>
-          <input
-            value={resortSearch}
-            onChange={e => setResortSearch(e.target.value)}
-            placeholder={t('onboarding_resort_search_placeholder')}
-            className="w-full bg-card border border-border rounded-lg px-4 py-2.5 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-accent transition-colors mb-2"
-          />
           <select
             value={form.resort_id}
             onChange={e => setForm({ ...form, resort_id: e.target.value })}
             className="w-full bg-card border border-border rounded-lg px-4 py-3 text-sm text-text-primary focus:outline-none focus:border-accent transition-colors"
           >
             <option value="">{t('profile_edit_resort_none')}</option>
-            {filteredResorts.map(r => (
+            {resorts.map(r => (
               <option key={r.id} value={r.id}>{r.nombre}, {r.estado_usa}</option>
             ))}
           </select>
         </div>
+        ) : (
+        <div className="text-xs text-yellow-300 bg-yellow-300/10 border border-yellow-300/20 rounded-lg px-3 py-2">
+          {t('db_missing_resort_column')}
+        </div>
+        )}
 
         {/* Empresa organizadora */}
         <div>
