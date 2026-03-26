@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  transpilePackages: ['d3-geo', 'd3-selection', 'd3-zoom', 'topojson-client'],
-  images: {
+images: {
     remotePatterns: [
       {
         protocol: 'https',
