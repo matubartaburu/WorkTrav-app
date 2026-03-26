@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import { useLanguage } from '@/lib/LanguageContext'
 import { getResortInfo } from '@/lib/resorts-data'
+import ResortsUsaMap from '@/components/resorts/ResortsUsaMap'
 
 export default function ResortsPage() {
   const { t, lang } = useLanguage()
@@ -24,6 +25,16 @@ export default function ResortsPage() {
     <div>
       <h1 className="text-xl font-semibold mb-1">{t('resorts_title')}</h1>
       <p className="text-text-secondary text-sm mb-6">{t('resorts_subtitle')}</p>
+
+      {resorts.length > 0 && (
+        <>
+          <h2 className="text-sm font-medium text-text-muted uppercase tracking-widest mb-3">
+            {t('resorts_map_title')}
+          </h2>
+          <p className="text-xs text-text-secondary mb-3">{t('resorts_map_hint')}</p>
+          <ResortsUsaMap resorts={resorts} lang={lang} />
+        </>
+      )}
 
       <div className="space-y-3">
         {resorts.length > 0 ? (
