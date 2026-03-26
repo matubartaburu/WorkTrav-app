@@ -13,5 +13,7 @@ INSERT INTO public.companies (nombre, pais, website, descripcion, precio_rango) 
   ('WorldConnect', 'Argentina', 'https://www.worldconnect.com.ar', 'Agencia argentina con programas W&T, au pair y trainee en USA. Buena atención y precios accesibles.', 'economico'),
   ('STB Student Travel Bureau', 'Brasil', 'https://www.stb.com.br', 'Una de las agencias de intercambio más grandes de Brasil. Programas W&T en resorts de ski con soporte en portugués.', 'medio'),
   ('CIE Intercâmbio', 'Brasil', 'https://www.cie.com.br', 'Agencia brasileña con amplia experiencia en programas Work & Travel USA. Atención personalizada.', 'medio'),
-  ('WISE Intercâmbio', 'Brasil', 'https://www.wiseintercambio.com.br', 'Especialistas brasileños en W&T para ski resorts en USA. Soporte durante toda la temporada.', 'economico')
+  ('WISE Intercâmbio', 'Brasil', 'https://www.wiseintercambio.com.br', 'Especialistas brasileños en W&T para ski resorts en USA. Soporte durante toda la temporada.', 'economico'),
+  ('Alliance Perú', 'Perú', 'https://www.alliperu.com', 'Agencia peruana con programa Work & Travel USA. Visa J-1 para trabajar en resorts durante la temporada de ski.', 'economico'),
+  ('Dargui', 'Perú', 'https://www.dargui.com', 'Agencia peruana especializada en programas de trabajo y prácticas en el extranjero, incluyendo W&T USA.', 'economico')
 ON CONFLICT DO NOTHING;
