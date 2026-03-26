@@ -6,28 +6,34 @@ export default function SnowEffect() {
 
   useEffect(() => {
     setFlakes(
-      Array.from({ length: 28 }, (_, i) => ({
+      Array.from({ length: 40 }, (_, i) => ({
         id: i,
-        left: (i * 3.7 + (i % 5) * 7) % 100,
-        delay: (i * 0.6) % 10,
-        duration: 9 + (i % 7) * 1.8,
-        size: 2 + (i % 3),
-        drift: (i % 2 === 0 ? 1 : -1) * (10 + (i % 20)),
+        left: Math.random() * 100,
+        delay: Math.random() * 10,
+        duration: 8 + Math.random() * 10,
+        size: 2 + Math.random() * 4,
+        drift: (Math.random() - 0.5) * 100,
+        opacity: 0.4 + Math.random() * 0.6,
       }))
     )
   }, [])
 
   return (
-    <div className="fixed inset-0 pointer-events-none overflow-hidden z-0" aria-hidden="true">
+    <div
+      className="fixed inset-0 pointer-events-none overflow-hidden"
+      style={{ zIndex: 9999 }}
+      aria-hidden="true"
+    >
       {flakes.map(f => (
         <div
           key={f.id}
-          className="absolute rounded-full bg-white snow-falling"
+          className="absolute rounded-full snow-falling"
           style={{
             left: `${f.left}%`,
-            top: '-8px',
+            top: '-10px',
             width: `${f.size}px`,
             height: `${f.size}px`,
+            background: 'rgba(232, 244, 253, 0.85)',
             opacity: 0,
             animationDelay: `${f.delay}s`,
             animationDuration: `${f.duration}s`,

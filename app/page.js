@@ -5,7 +5,6 @@ import { Star, Users, Map } from 'lucide-react'
 import WorkTravLogo from '@/components/WorkTravLogo'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 import FlagsMarquee from '@/components/FlagsMarquee'
-import SnowEffect from '@/components/SnowEffect'
 import { useLanguage } from '@/lib/LanguageContext'
 
 export default function Home() {
@@ -13,7 +12,6 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-background relative overflow-x-hidden">
-      <SnowEffect />
 
       {/* Navbar */}
       <nav className="relative z-10 border-b border-border px-6 py-4 flex items-center justify-between">
