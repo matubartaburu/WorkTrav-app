@@ -6,16 +6,14 @@ import { createClient } from '@/lib/supabase'
 import { useLanguage } from '@/lib/LanguageContext'
 import WorkTravLogo from '@/components/WorkTravLogo'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
-import CountrySelector from '@/components/CountrySelector'
-
-const TOTAL_STEPS = 3
 
 export default function OnboardingPage() {
   const router = useRouter()
-  const { t, lang } = useLanguage()
-  const [step, setStep] = useState(1)
-  const [form, setForm] = useState({ pais: '', edad: '', temporadas: null })
+  const { t } = useLanguage()
+  const [form, setForm] = useState({ resort_id: '', empresa_nombre: '' })
   const [profile, setProfile] = useState(null)
+  const [resorts, setResorts] = useState([])
+  const [resortSearch, setResortSearch] = useState('')
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(true)
 
@@ -25,53 +23,50 @@ export default function OnboardingPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
 
-      const { data: prof } = await supabase
-        .from('users').select('*').eq('id', user.id).single()
+      const [{ data: prof }, { data: resortList }] = await Promise.all([
+        supabase
+          .from('users')
+          .select('id, email, nombre, avatar_url, resort_id, empresa_nombre, onboarding_completado')
+          .eq('id', user.id)
+          .single(),
+        supabase.from('resorts').select('id, nombre, estado_usa').order('nombre'),
+      ])
 
-      if (prof?.onboarding_completado) { router.push('/feed'); return }
+      if (prof?.onboarding_completado && prof?.resort_id && prof?.empresa_nombre) {
+        router.push('/feed')
+        return
+      }
 
       setProfile(prof)
-      // Pre-llenar país si ya lo tenía (ej: registro por email)
-      if (prof?.pais) setForm(f => ({ ...f, pais: prof.pais }))
+      setResorts(resortList || [])
+      setForm({
+        resort_id: prof?.resort_id || '',
+        empresa_nombre: prof?.empresa_nombre || '',
+      })
       setLoading(false)
     }
     init()
   }, [router])
 
   const handleFinish = async () => {
+    if (!form.resort_id || !form.empresa_nombre.trim()) return
+
     setSaving(true)
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     await supabase.from('users').update({
-      pais: form.pais,
-      edad: form.edad ? parseInt(form.edad) : null,
-      temporadas_hechas: form.temporadas ?? 0,
+      resort_id: form.resort_id,
+      empresa_nombre: form.empresa_nombre.trim(),
       onboarding_completado: true,
     }).eq('id', user.id)
     router.push('/feed')
   }
 
-  const handleSkip = async () => {
-    setSaving(true)
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    await supabase.from('users').update({ onboarding_completado: true }).eq('id', user.id)
-    router.push('/feed')
-  }
-
-  const canNext = () => {
-    if (step === 1) return !!form.pais
-    if (step === 2) return !!form.edad && parseInt(form.edad) >= 16 && parseInt(form.edad) <= 99
-    if (step === 3) return form.temporadas !== null
-    return false
-  }
-
-  const seasons = [
-    { value: 0, label: t('onboarding_seasons_0') },
-    { value: 1, label: t('onboarding_seasons_1') },
-    { value: 2, label: t('onboarding_seasons_2') },
-    { value: 3, label: t('onboarding_seasons_3') },
-  ]
+  const filteredResorts = resorts.filter((resort) => {
+    const q = resortSearch.trim().toLowerCase()
+    if (!q) return true
+    return resort.nombre.toLowerCase().includes(q) || resort.estado_usa.toLowerCase().includes(q)
+  })
 
   if (loading) return null
 
@@ -84,21 +79,6 @@ export default function OnboardingPage() {
       </div>
 
       <div className="w-full max-w-sm">
-        {/* Barra de progreso */}
-        <div className="flex items-center gap-2 mb-2">
-          {[1, 2, 3].map((s) => (
-            <div
-              key={s}
-              className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
-                s <= step ? 'bg-accent' : 'bg-border'
-              }`}
-            />
-          ))}
-        </div>
-        <p className="text-xs text-text-muted mb-6">
-          {t('onboarding_step')} {step} {t('onboarding_of')} {TOTAL_STEPS}
-        </p>
-
         {/* Avatar y nombre de Google */}
         {profile && (
           <div className="flex items-center gap-3 mb-6">
@@ -120,74 +100,52 @@ export default function OnboardingPage() {
           </div>
         )}
 
-        {/* Card del paso */}
+        {/* Card del formulario */}
         <div className="bg-card border border-border rounded-2xl p-6">
-          {step === 1 && (
-            <div>
-              <h1 className="text-lg font-semibold mb-1">{t('onboarding_welcome')}</h1>
-              <p className="text-text-secondary text-sm mb-5">{t('onboarding_subtitle')}</p>
-              <h2 className="text-sm font-medium text-text-secondary mb-3">{t('onboarding_country_title')}</h2>
-              <CountrySelector value={form.pais} onChange={pais => setForm({ ...form, pais })} />
-            </div>
-          )}
+          <h1 className="text-lg font-semibold mb-1">{t('onboarding_required_title')}</h1>
+          <p className="text-text-secondary text-sm mb-5">{t('onboarding_required_subtitle')}</p>
 
-          {step === 2 && (
+          <div className="space-y-4">
             <div>
-              <h2 className="text-lg font-semibold mb-6">{t('onboarding_age_title')}</h2>
+              <label className="text-sm text-text-secondary mb-1.5 block">{t('onboarding_resort')}</label>
               <input
-                type="number"
-                min={16}
-                max={99}
-                value={form.edad}
-                onChange={(e) => setForm({ ...form, edad: e.target.value })}
-                placeholder={t('onboarding_age_placeholder')}
-                className="w-full bg-surface border border-border rounded-xl px-4 py-5 text-3xl text-center font-bold text-text-primary focus:outline-none focus:border-accent transition-colors"
-                autoFocus
+                value={resortSearch}
+                onChange={(e) => setResortSearch(e.target.value)}
+                placeholder={t('onboarding_resort_search_placeholder')}
+                className="w-full bg-surface border border-border rounded-lg px-4 py-2.5 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-accent transition-colors mb-2"
+              />
+              <select
+                value={form.resort_id}
+                onChange={(e) => setForm({ ...form, resort_id: e.target.value })}
+                className="w-full bg-surface border border-border rounded-lg px-4 py-3 text-sm text-text-primary focus:outline-none focus:border-accent transition-colors"
+              >
+                <option value="">{t('onboarding_resort_none')}</option>
+                {filteredResorts.map((r) => (
+                  <option key={r.id} value={r.id}>{r.nombre}, {r.estado_usa}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="text-sm text-text-secondary mb-1.5 block">{t('onboarding_company')}</label>
+              <input
+                value={form.empresa_nombre}
+                onChange={(e) => setForm({ ...form, empresa_nombre: e.target.value })}
+                placeholder={t('onboarding_company_placeholder')}
+                className="w-full bg-surface border border-border rounded-lg px-4 py-3 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-accent transition-colors"
               />
             </div>
-          )}
-
-          {step === 3 && (
-            <div>
-              <h2 className="text-lg font-semibold mb-5">{t('onboarding_seasons_title')}</h2>
-              <div className="space-y-2">
-                {seasons.map(({ value, label }) => (
-                  <button
-                    key={value}
-                    onClick={() => setForm({ ...form, temporadas: value })}
-                    className={`w-full py-4 px-5 rounded-xl text-sm font-medium border transition-colors text-left ${
-                      form.temporadas === value
-                        ? 'border-accent bg-accent/10 text-accent'
-                        : 'border-border hover:border-text-muted text-text-primary'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+          </div>
         </div>
 
         {/* Botones */}
-        <div className="mt-4 space-y-2">
+        <div className="mt-4">
           <button
-            onClick={() => {
-              if (step < TOTAL_STEPS) setStep(step + 1)
-              else handleFinish()
-            }}
-            disabled={!canNext() || saving}
+            onClick={handleFinish}
+            disabled={!form.resort_id || !form.empresa_nombre.trim() || saving}
             className="w-full bg-accent hover:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed text-white py-3 rounded-xl font-medium text-sm transition-colors"
           >
-            {step === TOTAL_STEPS ? t('onboarding_finish') : t('onboarding_next')}
-          </button>
-
-          <button
-            onClick={handleSkip}
-            disabled={saving}
-            className="w-full text-text-muted hover:text-text-secondary py-2 text-sm transition-colors"
-          >
-            {t('onboarding_skip')}
+            {t('onboarding_complete_profile')}
           </button>
         </div>
       </div>

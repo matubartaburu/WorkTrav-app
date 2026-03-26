@@ -6,13 +6,13 @@ import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { useLanguage } from '@/lib/LanguageContext'
-import CountrySelector from '@/components/CountrySelector'
 
 export default function EditProfilePage() {
   const router = useRouter()
   const { t } = useLanguage()
-  const [form, setForm] = useState({ nombre: '', pais: '', empresa_nombre: '', bio: '', resort_id: '' })
+  const [form, setForm] = useState({ empresa_nombre: '', resort_id: '' })
   const [resorts, setResorts] = useState([])
+  const [resortSearch, setResortSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -25,16 +25,13 @@ export default function EditProfilePage() {
       if (!user) { router.push('/login'); return }
 
       const [{ data: profile }, { data: resortList }] = await Promise.all([
-        supabase.from('users').select('nombre, pais, empresa_nombre, bio, resort_id').eq('id', user.id).single(),
+        supabase.from('users').select('empresa_nombre, resort_id').eq('id', user.id).single(),
         supabase.from('resorts').select('id, nombre, estado_usa').order('nombre'),
       ])
 
       if (profile) {
         setForm({
-          nombre: profile.nombre || '',
-          pais: profile.pais || '',
           empresa_nombre: profile.empresa_nombre || '',
-          bio: profile.bio || '',
           resort_id: profile.resort_id || '',
         })
       }
@@ -56,10 +53,7 @@ export default function EditProfilePage() {
     const { error: updateError } = await supabase
       .from('users')
       .update({
-        nombre: form.nombre.trim(),
-        pais: form.pais,
         empresa_nombre: form.empresa_nombre.trim(),
-        bio: form.bio.trim(),
         resort_id: form.resort_id || null,
       })
       .eq('id', user.id)
@@ -79,6 +73,12 @@ export default function EditProfilePage() {
     <div className="flex items-center justify-center py-20 text-text-secondary text-sm">Cargando...</div>
   )
 
+  const filteredResorts = resorts.filter((resort) => {
+    const q = resortSearch.trim().toLowerCase()
+    if (!q) return true
+    return resort.nombre.toLowerCase().includes(q) || resort.estado_usa.toLowerCase().includes(q)
+  })
+
   return (
     <div>
       <div className="flex items-center gap-3 mb-6">
@@ -88,35 +88,25 @@ export default function EditProfilePage() {
         <h1 className="text-xl font-semibold">{t('profile_edit_title')}</h1>
       </div>
 
+      <p className="text-sm text-text-secondary mb-5">{t('profile_edit_subtitle')}</p>
+
       <form onSubmit={handleSave} className="space-y-5">
-        {/* Nombre */}
-        <div>
-          <label className="text-sm text-text-secondary mb-1.5 block">{t('profile_name')}</label>
-          <input
-            value={form.nombre}
-            onChange={e => setForm({ ...form, nombre: e.target.value })}
-            placeholder="Tu nombre"
-            required
-            className="w-full bg-card border border-border rounded-lg px-4 py-3 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-accent transition-colors"
-          />
-        </div>
-
-        {/* País con selector de banderas */}
-        <div>
-          <label className="text-sm text-text-secondary mb-2 block">{t('register_country')}</label>
-          <CountrySelector value={form.pais} onChange={pais => setForm({ ...form, pais })} />
-        </div>
-
         {/* Mi resort esta temporada */}
         <div>
-          <label className="text-sm text-text-secondary mb-1.5 block">⛷️ Mi resort esta temporada</label>
+          <label className="text-sm text-text-secondary mb-1.5 block">{t('profile_edit_resort')}</label>
+          <input
+            value={resortSearch}
+            onChange={e => setResortSearch(e.target.value)}
+            placeholder={t('onboarding_resort_search_placeholder')}
+            className="w-full bg-card border border-border rounded-lg px-4 py-2.5 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-accent transition-colors mb-2"
+          />
           <select
             value={form.resort_id}
             onChange={e => setForm({ ...form, resort_id: e.target.value })}
             className="w-full bg-card border border-border rounded-lg px-4 py-3 text-sm text-text-primary focus:outline-none focus:border-accent transition-colors"
           >
-            <option value="">Sin resort seleccionado</option>
-            {resorts.map(r => (
+            <option value="">{t('profile_edit_resort_none')}</option>
+            {filteredResorts.map(r => (
               <option key={r.id} value={r.id}>{r.nombre}, {r.estado_usa}</option>
             ))}
           </select>
@@ -124,27 +114,16 @@ export default function EditProfilePage() {
 
         {/* Empresa organizadora */}
         <div>
-          <label className="text-sm text-text-secondary mb-1.5 block">Empresa organizadora</label>
+          <label className="text-sm text-text-secondary mb-1.5 block">{t('profile_edit_company')}</label>
           <input
             value={form.empresa_nombre}
             onChange={e => setForm({ ...form, empresa_nombre: e.target.value })}
-            placeholder="Ej: CCUSA, InterExchange, Work & Travel Co..."
+            placeholder={t('profile_edit_company_placeholder')}
             className="w-full bg-card border border-border rounded-lg px-4 py-3 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-accent transition-colors"
           />
         </div>
 
-        {/* Bio */}
-        <div>
-          <label className="text-sm text-text-secondary mb-1.5 block">{t('profile_bio')}</label>
-          <textarea
-            value={form.bio}
-            onChange={e => setForm({ ...form, bio: e.target.value.slice(0, 160) })}
-            placeholder={t('profile_bio_placeholder')}
-            rows={3}
-            className="w-full bg-card border border-border rounded-lg px-4 py-3 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-accent transition-colors resize-none leading-relaxed"
-          />
-          <p className="text-xs text-text-muted text-right mt-1">{form.bio.length}/160</p>
-        </div>
+        <p className="text-xs text-text-muted">{t('profile_edit_missing_hint')}</p>
 
         {error && (
           <p className="text-red-400 text-sm bg-red-400/10 border border-red-400/20 rounded-lg px-4 py-3">{error}</p>
