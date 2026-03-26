@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -11,6 +11,7 @@ import { createClient } from '@/lib/supabase'
 import { getResortInfo, DIFICULTAD_COLOR } from '@/lib/resorts-data'
 import { useLanguage } from '@/lib/LanguageContext'
 import PostCard from '@/components/feed/PostCard'
+import { POST_TOPICS } from '@/lib/post-topics'
 
 export default function ResortDetailPage() {
   const { id } = useParams()
@@ -19,6 +20,7 @@ export default function ResortDetailPage() {
   const [posts, setPosts] = useState([])
   const [userId, setUserId] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [topicFilter, setTopicFilter] = useState('all')
 
   useEffect(() => {
     const load = async () => {
@@ -51,6 +53,10 @@ export default function ResortDetailPage() {
   )
 
   const info = getResortInfo(resort.nombre, lang)
+  const filteredPosts = useMemo(() => {
+    if (topicFilter === 'all') return posts
+    return posts.filter((post) => (post.topic || 'general') === topicFilter)
+  }, [posts, topicFilter])
 
   return (
     <div>
@@ -183,18 +189,50 @@ export default function ResortDetailPage() {
           </Link>
         </div>
 
-        {posts.length > 0 ? (
+        <div className="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-hide">
+          <button
+            onClick={() => setTopicFilter('all')}
+            className={`shrink-0 text-xs px-3 py-1.5 rounded-full border transition-colors ${
+              topicFilter === 'all'
+                ? 'bg-accent border-accent text-white'
+                : 'bg-surface border-border text-text-secondary hover:border-accent/50'
+            }`}
+          >
+            {t('post_topic_all')}
+          </button>
+          {POST_TOPICS.map((topic) => (
+            <button
+              key={topic}
+              onClick={() => setTopicFilter(topic)}
+              className={`shrink-0 text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                topicFilter === topic
+                  ? 'bg-accent border-accent text-white'
+                  : 'bg-surface border-border text-text-secondary hover:border-accent/50'
+              }`}
+            >
+              {t(`topic_${topic}`)}
+            </button>
+          ))}
+        </div>
+
+        {filteredPosts.length > 0 ? (
           <div className="space-y-3">
-            {posts.map(post => (
+            {filteredPosts.map(post => (
               <PostCard key={post.id} post={post} currentUserId={userId} />
             ))}
           </div>
         ) : (
           <div className="bg-card border border-border rounded-xl p-8 text-center text-text-secondary text-sm">
-            <p className="mb-2">{t('resort_no_posts')} {resort.nombre}.</p>
-            <Link href={`/new-post?resort=${id}`} className="text-accent hover:underline">
-              {t('resort_be_first')}
-            </Link>
+            {posts.length > 0 ? (
+              <p className="mb-2">{t('post_topic_no_results')}</p>
+            ) : (
+              <>
+                <p className="mb-2">{t('resort_no_posts')} {resort.nombre}.</p>
+                <Link href={`/new-post?resort=${id}`} className="text-accent hover:underline">
+                  {t('resort_be_first')}
+                </Link>
+              </>
+            )}
           </div>
         )}
       </div>

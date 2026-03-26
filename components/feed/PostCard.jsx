@@ -139,6 +139,12 @@ export default function PostCard({ post, currentUserId }) {
         </div>
       </div>
 
+      <div className="mb-3">
+        <span className="inline-flex items-center text-[11px] font-medium px-2.5 py-1 rounded-full bg-accent/10 border border-accent/20 text-accent">
+          {t(`topic_${post.topic || 'general'}`)}
+        </span>
+      </div>
+
       {/* Contenido */}
       <p className="text-sm text-text-primary leading-relaxed mb-4">
         {post.contenido}

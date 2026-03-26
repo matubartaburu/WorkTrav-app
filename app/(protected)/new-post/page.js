@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { useLanguage } from '@/lib/LanguageContext'
+import { POST_TOPICS } from '@/lib/post-topics'
 
 const MAX_CHARS = 500
 
@@ -15,6 +16,7 @@ export default function NewPostPage() {
   const { t } = useLanguage()
   const [contenido, setContenido] = useState('')
   const [resortId, setResortId] = useState(searchParams.get('resort') || '')
+  const [topic, setTopic] = useState('general')
   const [resorts, setResorts] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -41,6 +43,7 @@ export default function NewPostPage() {
       user_id: user.id,
       contenido: contenido.trim(),
       resort_id: resortId || null,
+      topic,
       likes_count: 0,
     })
 
@@ -89,6 +92,19 @@ export default function NewPostPage() {
             <option value="">{t('new_post_resort_none')}</option>
             {resorts.map(r => (
               <option key={r.id} value={r.id}>{r.nombre}, {r.estado_usa}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="text-sm text-text-secondary mb-1.5 block">{t('new_post_topic')}</label>
+          <select
+            value={topic}
+            onChange={(e) => setTopic(e.target.value)}
+            className="w-full bg-card border border-border rounded-lg px-4 py-3 text-sm text-text-primary focus:outline-none focus:border-accent transition-colors"
+          >
+            {POST_TOPICS.map((value) => (
+              <option key={value} value={value}>{t(`topic_${value}`)}</option>
             ))}
           </select>
         </div>
