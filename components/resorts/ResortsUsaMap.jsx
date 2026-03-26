@@ -5,6 +5,26 @@ import { useRouter } from 'next/navigation'
 import { getResortInfo } from '@/lib/resorts-data'
 import { useLanguage } from '@/lib/LanguageContext'
 
+function spreadNearby(resorts) {
+  const GRID = 1.2 // grados — resorts dentro de este radio se consideran "vecinos"
+  const RADIUS = 0.5 // grados de separación en el círculo
+
+  const groups = {}
+  resorts.forEach(r => {
+    const key = `${Math.round(r.latitud / GRID)}_${Math.round(r.longitud / GRID)}`
+    if (!groups[key]) groups[key] = []
+    groups[key].push(r)
+  })
+
+  return Object.values(groups).flatMap(group => {
+    if (group.length === 1) return [{ ...group[0], mLat: group[0].latitud, mLon: group[0].longitud }]
+    return group.map((r, i) => {
+      const angle = (i / group.length) * Math.PI * 2 - Math.PI / 2
+      return { ...r, mLat: r.latitud + Math.sin(angle) * RADIUS, mLon: r.longitud + Math.cos(angle) * RADIUS }
+    })
+  })
+}
+
 export default function ResortsUsaMap({ resorts, lang }) {
   const router = useRouter()
   const { t } = useLanguage()
@@ -19,6 +39,8 @@ export default function ResortsUsaMap({ resorts, lang }) {
       r => r.latitud != null && r.longitud != null
     )
     if (validResorts.length === 0) return
+
+    const spread = spreadNearby(validResorts)
 
     import('leaflet').then(L => {
       delete L.default.Icon.Default.prototype._getIconUrl
@@ -45,7 +67,7 @@ export default function ResortsUsaMap({ resorts, lang }) {
         }
       ).addTo(map)
 
-      validResorts.forEach(resort => {
+      spread.forEach(resort => {
         const info = getResortInfo(resort.nombre, lang)
         const emoji = info?.emoji || '⛷️'
 
@@ -78,7 +100,7 @@ export default function ResortsUsaMap({ resorts, lang }) {
         `
 
         L.default
-          .marker([Number(resort.latitud), Number(resort.longitud)], { icon })
+          .marker([resort.mLat, resort.mLon], { icon })
           .bindPopup(popupContent, { maxWidth: 260 })
           .addTo(map)
       })
