@@ -11,7 +11,8 @@ import CountrySelector from '@/components/CountrySelector'
 export default function EditProfilePage() {
   const router = useRouter()
   const { t } = useLanguage()
-  const [form, setForm] = useState({ nombre: '', pais: '', empresa_nombre: '', bio: '' })
+  const [form, setForm] = useState({ nombre: '', pais: '', empresa_nombre: '', bio: '', resort_id: '' })
+  const [resorts, setResorts] = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -23,11 +24,10 @@ export default function EditProfilePage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
 
-      const { data: profile } = await supabase
-        .from('users')
-        .select('nombre, pais, empresa_nombre, bio')
-        .eq('id', user.id)
-        .single()
+      const [{ data: profile }, { data: resortList }] = await Promise.all([
+        supabase.from('users').select('nombre, pais, empresa_nombre, bio, resort_id').eq('id', user.id).single(),
+        supabase.from('resorts').select('id, nombre, estado_usa').order('nombre'),
+      ])
 
       if (profile) {
         setForm({
@@ -35,8 +35,10 @@ export default function EditProfilePage() {
           pais: profile.pais || '',
           empresa_nombre: profile.empresa_nombre || '',
           bio: profile.bio || '',
+          resort_id: profile.resort_id || '',
         })
       }
+      setResorts(resortList || [])
       setLoading(false)
     }
     fetchProfile()
@@ -58,6 +60,7 @@ export default function EditProfilePage() {
         pais: form.pais,
         empresa_nombre: form.empresa_nombre.trim(),
         bio: form.bio.trim(),
+        resort_id: form.resort_id || null,
       })
       .eq('id', user.id)
 
@@ -102,6 +105,21 @@ export default function EditProfilePage() {
         <div>
           <label className="text-sm text-text-secondary mb-2 block">{t('register_country')}</label>
           <CountrySelector value={form.pais} onChange={pais => setForm({ ...form, pais })} />
+        </div>
+
+        {/* Mi resort esta temporada */}
+        <div>
+          <label className="text-sm text-text-secondary mb-1.5 block">⛷️ Mi resort esta temporada</label>
+          <select
+            value={form.resort_id}
+            onChange={e => setForm({ ...form, resort_id: e.target.value })}
+            className="w-full bg-card border border-border rounded-lg px-4 py-3 text-sm text-text-primary focus:outline-none focus:border-accent transition-colors"
+          >
+            <option value="">Sin resort seleccionado</option>
+            {resorts.map(r => (
+              <option key={r.id} value={r.id}>{r.nombre}, {r.estado_usa}</option>
+            ))}
+          </select>
         </div>
 
         {/* Empresa organizadora */}

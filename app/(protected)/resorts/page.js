@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
-import { MapPin, DollarSign, Home, ArrowUp, Snowflake } from 'lucide-react'
+import { MapPin, DollarSign, Home, ArrowUp, Snowflake, X, Search } from 'lucide-react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { createClient } from '@/lib/supabase'
@@ -29,28 +29,12 @@ const GRADIENTS = [
 ]
 
 const ALTITUDES = {
-  'Vail': '3,527m',
-  'Aspen': '3,813m',
-  'Aspen Snowmass': '3,813m',
-  'Breckenridge': '3,914m',
-  'Jackson Hole': '3,185m',
-  'Park City': '3,048m',
-  'Mammoth Mountain': '3,369m',
-  'Mammoth': '3,369m',
-  'Steamboat': '3,221m',
-  'Steamboat Springs': '3,221m',
-  'Telluride': '4,009m',
-  'Big Sky': '3,403m',
-  'Sun Valley': '2,789m',
-  'Heavenly': '3,060m',
-  'Killington': '1,293m',
-  'Stowe': '1,339m',
-  'Taos': '3,804m',
-  'Snowbird': '3,353m',
-  'Alta': '3,216m',
-  'Copper Mountain': '3,753m',
-  'Winter Park': '3,676m',
-  'Red River': '3,154m',
+  'Vail': '3,527m', 'Aspen Snowmass': '3,813m', 'Breckenridge': '3,914m',
+  'Jackson Hole': '3,185m', 'Park City': '3,048m', 'Mammoth Mountain': '3,369m',
+  'Steamboat Springs': '3,221m', 'Telluride': '4,009m', 'Big Sky': '3,403m',
+  'Sun Valley': '2,789m', 'Killington': '1,293m', 'Stowe': '1,339m',
+  'Taos Ski Valley': '3,804m', 'Snowbird': '3,353m', 'Red River': '3,154m',
+  'Whistler Blackcomb': '2,182m',
 }
 
 function FilterChip({ label, active, onClick }) {
@@ -71,6 +55,7 @@ function FilterChip({ label, active, onClick }) {
 export default function ResortsPage() {
   const { t, lang } = useLanguage()
   const [resorts, setResorts] = useState([])
+  const [search, setSearch] = useState('')
   const [stateFilter, setStateFilter] = useState(null)
   const [salaryFilter, setSalaryFilter] = useState(0)
 
@@ -83,12 +68,13 @@ export default function ResortsPage() {
     load()
   }, [])
 
-  const states = useMemo(() => {
-    return [...new Set(resorts.map(r => r.estado_usa))].sort()
-  }, [resorts])
+  const states = useMemo(() => (
+    [...new Set(resorts.map(r => r.estado_usa))].sort()
+  ), [resorts])
 
   const filtered = useMemo(() => {
     return resorts.filter(resort => {
+      if (search && !resort.nombre.toLowerCase().includes(search.toLowerCase())) return false
       if (stateFilter && resort.estado_usa !== stateFilter) return false
       if (salaryFilter > 0) {
         const info = getResortInfo(resort.nombre, lang)
@@ -98,10 +84,10 @@ export default function ResortsPage() {
       }
       return true
     })
-  }, [resorts, stateFilter, salaryFilter, lang])
+  }, [resorts, search, stateFilter, salaryFilter, lang])
 
-  const hasFilters = stateFilter || salaryFilter > 0
-  const uniqueStates = states.length
+  const hasFilters = search || stateFilter || salaryFilter > 0
+  const clearAll = () => { setSearch(''); setStateFilter(null); setSalaryFilter(0) }
 
   return (
     <div>
@@ -114,7 +100,7 @@ export default function ResortsPage() {
         <h1 className="text-3xl font-bold tracking-tight mb-1">
           {t('resorts_title') || 'Resorts en'} <span className="text-accent">USA</span>
         </h1>
-        <p className="text-text-secondary text-sm">{t('resorts_subtitle') || 'Los mejores destinos para tu temporada W&T'}</p>
+        <p className="text-text-secondary text-sm">{t('resorts_subtitle')}</p>
       </div>
 
       {/* Stats */}
@@ -122,7 +108,7 @@ export default function ResortsPage() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
           {[
             { value: resorts.length, label: 'RESORTS', emoji: '⛷️' },
-            { value: uniqueStates, label: 'ESTADOS', emoji: '📍' },
+            { value: states.length, label: 'ESTADOS', emoji: '📍' },
             { value: '🇺🇸', label: 'PAÍS', emoji: null },
             { value: 'Dic–Abr', label: 'TEMPORADA', emoji: '❄️' },
           ].map(s => (
@@ -137,15 +123,27 @@ export default function ResortsPage() {
         </div>
       )}
 
+      {/* Buscador */}
+      <div className="relative mb-4">
+        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
+        <input
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder={t('resorts_search_placeholder') || 'Buscar resort...'}
+          className="w-full bg-card border border-border rounded-xl pl-9 pr-4 py-3 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-accent transition-colors"
+        />
+        {search && (
+          <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary">
+            <X size={14} />
+          </button>
+        )}
+      </div>
+
       {/* Filtros */}
       {resorts.length > 0 && (
         <div className="space-y-3 mb-6">
           <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-            <FilterChip
-              label={t('filter_all_states') || 'Todos los estados'}
-              active={!stateFilter}
-              onClick={() => setStateFilter(null)}
-            />
+            <FilterChip label={t('filter_all_states')} active={!stateFilter} onClick={() => setStateFilter(null)} />
             {states.map(state => (
               <FilterChip
                 key={state}
@@ -158,7 +156,7 @@ export default function ResortsPage() {
 
           <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
             <span className="shrink-0 text-xs text-text-muted self-center flex items-center gap-1">
-              <DollarSign size={11} /> {t('filter_min_salary') || 'Salario mín.'}
+              <DollarSign size={11} /> {t('filter_min_salary')}
             </span>
             {SALARY_OPTIONS.map(opt => (
               <FilterChip
@@ -172,14 +170,9 @@ export default function ResortsPage() {
 
           {hasFilters && (
             <div className="flex items-center justify-between">
-              <span className="text-xs text-text-muted">
-                {filtered.length} {t('filter_results') || 'resultados'}
-              </span>
-              <button
-                onClick={() => { setStateFilter(null); setSalaryFilter(0) }}
-                className="text-xs text-text-secondary hover:text-text-primary transition-colors"
-              >
-                {t('filter_clear') || 'Limpiar filtros'}
+              <span className="text-xs text-text-muted">{filtered.length} {t('filter_results')}</span>
+              <button onClick={clearAll} className="flex items-center gap-1 text-xs text-text-secondary hover:text-text-primary transition-colors">
+                <X size={12} /> {t('filter_clear')}
               </button>
             </div>
           )}
@@ -187,7 +180,7 @@ export default function ResortsPage() {
       )}
 
       {/* Mapa */}
-      {resorts.length > 0 && (
+      {resorts.length > 0 && !search && (
         <>
           <h2 className="text-sm font-medium text-text-muted uppercase tracking-widest mb-3">
             {t('resorts_map_title')}
@@ -197,8 +190,8 @@ export default function ResortsPage() {
         </>
       )}
 
-      {/* Resort cards grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+      {/* Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
         {filtered.length > 0 ? (
           filtered.map((resort, i) => {
             const info = getResortInfo(resort.nombre, lang)
@@ -209,42 +202,26 @@ export default function ResortsPage() {
                 key={resort.id}
                 href={`/resorts/${resort.id}`}
                 className="relative rounded-2xl overflow-hidden group hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 block"
-                style={{
-                  background: gradient,
-                  minHeight: '190px',
-                  boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
-                }}
+                style={{ background: gradient, minHeight: '190px', boxShadow: '0 4px 24px rgba(0,0,0,0.4)' }}
               >
-                {/* Decorative snowflake */}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
-                  <Snowflake
-                    size={130}
-                    strokeWidth={0.35}
-                    className="text-white/[0.04] group-hover:text-white/[0.08] transition-colors duration-500"
-                  />
+                  <Snowflake size={130} strokeWidth={0.35} className="text-white/[0.04] group-hover:text-white/[0.08] transition-colors duration-500" />
                 </div>
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                  style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.07) 0%, transparent 55%)' }} />
 
-                {/* Hover shine */}
-                <div
-                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-                  style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.07) 0%, transparent 55%)' }}
-                />
-
-                {/* Top badges */}
                 <div className="relative z-10 flex items-start justify-between p-4 pb-0">
                   <span className="text-xs font-medium text-white/80 bg-white/10 border border-white/10 backdrop-blur-sm px-3 py-1 rounded-full">
                     {resort.estado_usa}
                   </span>
                   {altitude && (
                     <span className="text-xs font-medium text-white/70 bg-white/10 border border-white/10 backdrop-blur-sm px-2.5 py-1 rounded-full flex items-center gap-1">
-                      <ArrowUp size={9} strokeWidth={3} />
-                      {altitude}
+                      <ArrowUp size={9} strokeWidth={3} />{altitude}
                     </span>
                   )}
                 </div>
 
-                {/* Content */}
-                <div className="relative z-10 p-5 pt-6">
+                <div className="relative z-10 p-5 pt-4">
                   <div className="flex items-center gap-2 mb-1">
                     {info && <span className="text-xl leading-none">{info.emoji}</span>}
                     <h2 className="text-xl font-bold text-white leading-tight tracking-tight">{resort.nombre}</h2>
@@ -269,31 +246,17 @@ export default function ResortsPage() {
                       )}
                     </div>
                   )}
-
-                  {!info && (
-                    <div className="flex items-center gap-1.5 mt-2 text-white/40">
-                      <MapPin size={11} />
-                      <span className="text-xs">{resort.estado_usa}, USA</span>
-                    </div>
-                  )}
                 </div>
               </Link>
             )
           })
         ) : resorts.length > 0 ? (
           <div className="col-span-2 text-center py-12 text-text-secondary text-sm">
-            <p className="mb-2">{t('filter_no_results') || 'Sin resultados para estos filtros.'}</p>
-            <button
-              onClick={() => { setStateFilter(null); setSalaryFilter(0) }}
-              className="text-accent hover:underline text-xs"
-            >
-              {t('filter_clear') || 'Limpiar filtros'}
-            </button>
+            <p className="mb-2">{t('filter_no_results')}</p>
+            <button onClick={clearAll} className="text-accent hover:underline text-xs">{t('filter_clear')}</button>
           </div>
         ) : (
-          <div className="col-span-2 text-center py-16 text-text-secondary text-sm">
-            {t('resorts_loading') || 'Cargando resorts...'}
-          </div>
+          <div className="col-span-2 text-center py-16 text-text-secondary text-sm">{t('resorts_loading')}</div>
         )}
       </div>
     </div>
