@@ -3,10 +3,12 @@
 import { useEffect, useState } from 'react'
 import { MapPin, DollarSign, Home, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import { createClient } from '@/lib/supabase'
 import { useLanguage } from '@/lib/LanguageContext'
 import { getResortInfo } from '@/lib/resorts-data'
-import ResortsUsaMap from '@/components/resorts/ResortsUsaMap'
+
+const ResortsUsaMap = dynamic(() => import('@/components/resorts/ResortsUsaMap'), { ssr: false })
 
 export default function ResortsPage() {
   const { t, lang } = useLanguage()
