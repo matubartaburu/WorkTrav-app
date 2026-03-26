@@ -14,31 +14,31 @@ export default function Home() {
     <main className="min-h-screen bg-background relative overflow-x-hidden">
 
       {/* Navbar */}
-      <nav className="relative z-10 border-b border-border px-6 py-4 flex items-center justify-between">
+      <nav className="relative z-10 border-b border-border px-4 sm:px-6 py-3 sm:py-4 pt-[max(env(safe-area-inset-top),0.75rem)] flex items-center justify-between gap-3">
         <WorkTravLogo size="md" />
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4 shrink-0">
           <LanguageSwitcher />
-          <Link href="/login" className="text-text-secondary hover:text-text-primary text-sm transition-colors">
+          <Link href="/login" className="hidden sm:inline text-text-secondary hover:text-text-primary text-sm transition-colors whitespace-nowrap">
             {t('login_title')}
           </Link>
-          <Link href="/register" className="bg-accent hover:bg-accent-hover text-white text-sm px-4 py-2 rounded-lg transition-colors">
+          <Link href="/register" className="bg-accent hover:bg-accent-hover text-white text-sm px-3 sm:px-4 py-2 rounded-lg transition-colors whitespace-nowrap">
             {t('hero_cta')}
           </Link>
         </div>
       </nav>
 
       {/* Hero */}
-      <section className="relative z-10 px-6 pt-20 pb-10 text-center max-w-3xl mx-auto">
+      <section className="relative z-10 px-4 sm:px-6 pt-14 sm:pt-20 pb-10 text-center max-w-3xl mx-auto">
         <div className="inline-flex items-center gap-2 bg-card border border-border rounded-full px-4 py-1.5 text-sm text-text-secondary mb-8">
           <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
           {t('community_badge')}
         </div>
 
-        <h1 className="text-5xl font-bold leading-tight mb-6 tracking-tight">
+        <h1 className="text-4xl sm:text-5xl font-bold leading-tight mb-6 tracking-tight">
           {t('hero_title')}{' '}
           <span className="text-accent">{t('hero_title_highlight')}</span>
         </h1>
-        <p className="text-text-secondary text-xl mb-10 leading-relaxed">
+        <p className="text-text-secondary text-lg sm:text-xl mb-10 leading-relaxed">
           {t('hero_subtitle')}
         </p>
         <div className="flex items-center justify-center gap-4 flex-wrap">
