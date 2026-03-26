@@ -44,6 +44,11 @@ export default function ResortDetailPage() {
     load()
   }, [id])
 
+  const filteredPosts = useMemo(() => {
+    if (topicFilter === 'all') return posts
+    return posts.filter((post) => (post.topic || 'general') === topicFilter)
+  }, [posts, topicFilter])
+
   if (loading) return (
     <div className="text-center py-20 text-text-secondary text-sm">{t('resorts_loading')}</div>
   )
@@ -53,10 +58,6 @@ export default function ResortDetailPage() {
   )
 
   const info = getResortInfo(resort.nombre, lang)
-  const filteredPosts = useMemo(() => {
-    if (topicFilter === 'all') return posts
-    return posts.filter((post) => (post.topic || 'general') === topicFilter)
-  }, [posts, topicFilter])
 
   return (
     <div>
